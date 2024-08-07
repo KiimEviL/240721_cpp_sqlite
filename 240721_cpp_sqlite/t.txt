@@ -1,0 +1,118 @@
+#include <iostream>
+#include <string>
+#include "sqlite/sqlite3.h"
+using namespace std;
+
+int main() {
+	char* err;
+	sqlite3* db;
+	sqlite3_stmt* s;
+	sqlite3_open("DB.db", &db);
+	int rc = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS NUMBERS(N1 INT, N2 INT)", NULL, NULL, &err);
+	if (rc != SQLITE_OK) {
+		cerr << "creating table error: " << err << endl;
+	}
+	else {
+		cout << "Table created successfully!" << endl;
+	}
+
+	for (int i = 0; i < 10; i++) {
+		string sql = "INSERT INTO NUMBERS VALUES(" + to_string(i)+ ", " + to_string(i*i) + ")";
+		rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err);
+		if (rc != SQLITE_OK) {
+			cerr << "INSERT error: " << err;
+		}
+	}
+
+	sqlite3_prepare_v2(db, "SELECT N1, N2 FROM NUMBERS", -1, &s, 0);
+	int a, b;
+	while (sqlite3_step(s) != SQLITE_DONE) {
+		a = sqlite3_column_int(s, 0);
+		b = sqlite3_column_int(s, 1);
+		cout << "a = " << a << ", b = " << b << endl;
+	}
+	return 0;
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#include "sqlite/sqlite3.h";
+#include <stdio.h>
+#include <iostream>
+using namespace std;
+
+static int createDB(const char* s);
+static int createTable(const char* s);
+static int insertData(const char* s);
+//static int updateData(const char* s);
+
+int main() {
+	const char* dir = "aaa.db";
+
+	//createDB(dir);
+	createTable(dir);
+	insertData(dir);
+	//updateData(dir);
+
+	return 0;
+}
+
+static int createDB(const char* s) {
+	sqlite3* DB;
+	int exit = 0;
+	exit = sqlite3_open(s, &DB);
+	sqlite3_close(DB);
+	return 0;
+}
+
+static int createTable(const char* s) {
+	sqlite3* DB;
+	char* errorMessage;
+	
+	string sql = "CREATE TABLE IF NOT EXISTS GRADES("
+		"ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+		"NAME      TEXT NOT NULL, "
+		"LNAME     TEXT NOT NULL, "
+		"AGE       INT  NOT NULL, "
+		"ADDRESS   CHAR(50), "
+		"GRADE     CHAR(1) );";
+	try
+	{
+		int exit = sqlite3_open(s, &DB);
+		exit = sqlite3_exec(DB, sql.c_str(), NULL, NULL, &errorMessage);
+		if (exit != SQLITE_OK)
+		{
+			cerr << "Error in createTable function." << endl;
+		}
+		else
+			cout << "Table successfully created" << endl;
+		sqlite3_close(DB);
+	}
+	catch (const exception e)
+	{
+		cerr << e.what();
+		
+	}
+	return 0;
+}
+
+static int insertData(const char* s)
+{
+	sqlite3* DB;
+	char* errorMessage;
+
+	string sql = "INSERT INTO GRADES (NAME, LNAME, AGE, ADDRESS, GRADE) VALUES('Fred', 'Cooper', 24, 'New York', 'C');";
+
+	int exit = sqlite3_open(s, &DB);
+	exit = sqlite3_exec(DB, sql.c_str(), NULL, NULL, &errorMessage);
+
+	if (exit != SQLITE_OK)
+	{
+		cerr << "Error in insertData function" << endl;
+	}
+	else
+		cout << "Data inserted successfully" << endl;
+
+	return 0;
+}
